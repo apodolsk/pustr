@@ -10,7 +10,7 @@ void race(cnt maxns, uint pcnt, uint idmod){
     T->racing = true;
     if(!T->racing && interrupts_enabled() && randpcnt(pcnt >> 1)){
         (kyield)((dptr) -1);
-    }else if(0 == mod_pow2(PUN(uptr, get_dbg_id()), idmod) && randpcnt(pcnt))
+    }else if(!mod_pow2(PUN(uptr, get_dbg_id()), idmod) && randpcnt(pcnt))
         nanosleep(&(struct timespec){.tv_nsec = rand() % maxns}, NULL);
     T->racing = false;
 }
