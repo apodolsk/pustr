@@ -5,8 +5,6 @@
 
 #define lprintf(fmt, as...) puprintf("% "fmt"\n", get_dbg_id(), ##as)
 
-#define NAMEFMT(a, _, __) a:%
-
 #if !LOG_MASTER
 #define log(...) 0
 #define pp(as...) (as)
@@ -14,6 +12,7 @@
 #define trace(module, lvl, f, as...) f(as)
 #else
 
+#define NAMEFMT(a, _, __) a:%
 #define ppl(lvl, as...)                                                 \
     log_cond(lvl, MODULE,                                               \
              ({                                                         \
@@ -23,6 +22,19 @@
              }),                                                        \
              as)
 #define pp(as...) ppl(1, ##as)
+
+#define LINEFMT(a, _, __) a:%\n
+#define lppl(lvl, as...)                                                \
+    log_cond(lvl, MODULE,                                               \
+             ({                                                         \
+                 MAP_NOCOMMA(estore, __pp, as);                         \
+                 lprintf(STRLIT(MAP_NOCOMMA(LINEFMT,, ##as)), MAP(eref, __pp, as)); \
+                 MAP(eref, __pp, as);                                   \
+             }),                                                        \
+             as)
+
+
+
 
 #define log(lvl, fmt, as...) log_cond(lvl, MODULE, lprintf(fmt, ##as), 0)
 
