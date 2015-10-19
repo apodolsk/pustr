@@ -4,7 +4,7 @@
 #include <asm.h>
 
 #define RACE_NS 9000
-#define RACE_PCNT (E_DBG_LVL ? 50 : 0)
+#define RACE_PCNT (E_DBG_LVL ? 30 : 0)
 #define RACE_MOD 1
 
 extern uptr (xadd)(iptr s, volatile uptr *p);
