@@ -5,7 +5,7 @@
 
 #define RACE_NS 9000
 #define RACE_PCNT (E_DBG_LVL ? 30 : 0)
-#define RACE_MOD 1
+#define RACE_MOD 2
 
 extern uptr (xadd)(iptr s, volatile uptr *p);
 extern uptr (xchg)(uptr s, volatile uptr *p);
