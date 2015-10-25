@@ -42,10 +42,16 @@ extern noreturn void panic(const char *, ...);
         panic("WTF!");                                  \
     })
 
+/* #define TODO(fmt, as...)                                            \ */
+/*     ({                                                              \ */
+/*         elog(0, "My creator has abandoned me. %:%:%. " fmt  \ */
+/*              , __FILE__ , __func__ , __LINE__, ##as);               \ */
+/*         ebreakpoint(0);                                             \ */
+/*         panic("TODO!");                                             \ */
+/*     })                                             */
+
 #define TODO(fmt, as...)                                            \
     ({                                                              \
-        elog(0, "My creator has abandoned me. %:%:%. " fmt  \
-             , __FILE__ , __func__ , __LINE__, ##as);               \
         ebreakpoint(0);                                             \
         panic("TODO!");                                             \
     })                                            

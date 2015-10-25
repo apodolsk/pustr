@@ -28,75 +28,74 @@ bool _cas2_won(dptr n, volatile dptr *p, dptr *old);
 howok _upd2_ok(dptr n, volatile dptr *p, dptr *old);
 bool _upd2_won(dptr n, volatile dptr *p, dptr *old);
 
-
 #define atomic_read(p)                          \
-    PUN(typeof(*p), _atomic_read((uptr *) p))   \
+    PUN(typeof(*p), _atomic_read((volatile uptr *) p))   \
 
 #define xadd(s, d) PUN(typeof(*d),              \
-                       trace(ATOMICS, 2, _xadd, s, (uptr *) d))
-#define xchg(s, d) PUN(typeof(*d), _xchg(PUN(uptr, s), (uptr *) (d)))
-#define xchg2(s, d) PUN(typeof(*d), _xchg2(PUN(dptr, s), (dptr *) (d)))
+                       trace(ATOMICS, 2, _xadd, s, (volatile uptr *) d))
+#define xchg(s, d) PUN(typeof(*d), _xchg(PUN(uptr, s), (volatile uptr *) (d)))
+#define xchg2(s, d) PUN(typeof(*d), _xchg2(PUN(dptr, s), (volatile dptr *) (d)))
 #define condxadd(n, d, lim)                     \
-    ((typeof(*d)) _condxadd(n, (uptr *) d, (uptr) lim))
+    ((typeof(*d)) _condxadd(n, (volatile uptr *) d, (uptr) lim))
 
 #define atomic_read2(p)                         \
-    PUN(typeof(*p), _atomic_read2((dptr *) p))  \
+    PUN(typeof(*p), _atomic_read2((volatile dptr *) p))  \
 
 
 #define atomic_write(n, p)                      \
-    _atomic_write2(PUN(uptr, n), (uptr *) p)    \
+    _atomic_write2(PUN(uptr, n), (volatile uptr *) p)    \
 
 #define atomic_write2(n, p)                     \
-    _atomic_write2(PUN(dptr, n), (dptr *) p)    \
+    _atomic_write2(PUN(dptr, n), (volatile dptr *) p)    \
 
 #define cas(n, p, old)                          \
     PUN(typeof(old),                            \
         trace(ATOMICS, 1, _cas,                 \
               PUN(uptr, n),                     \
-              (uptr *) (p),                     \
+              (volatile uptr *) (p),                     \
               PUN(uptr, old)))
 
 #define cas2(n, p, old)                         \
     PUN(typeof(old),                            \
         trace(ATOMICS, 1, _cas2,                \
               PUN(dptr, n),                     \
-              (dptr *) (p),                     \
+              (volatile dptr *) (p),                     \
               PUN(dptr, old)))
 
 #define cas_ok(n, p, op)                        \
     trace(ATOMICS, 1, _cas_ok,                  \
           PUN(uptr, n),                         \
-          (uptr *) (p),                         \
+          (volatile uptr *) (p),                         \
           (uptr *) (op))
 
 #define cas2_ok(n, p, op)                       \
     trace(ATOMICS, 1, _cas2_ok,                 \
           PUN(dptr, n),                         \
-          (dptr *) (p),                         \
+          (volatile dptr *) (p),                         \
           (dptr *) (op))
 
 #define cas_won(n, p, op)                       \
     trace(ATOMICS, 1, _cas_won,                 \
           PUN(uptr, n),                         \
-          (uptr *) (p),                         \
+          (volatile uptr *) (p),                         \
           (uptr *) (op))
 
 #define cas2_won(n, p, op)                      \
     trace(ATOMICS, 1, _cas2_won,                \
           PUN(dptr, n),                         \
-          (dptr *) (p),                         \
+          (volatile dptr *) (p),                         \
           (dptr *) (op))
 
 #define upd2_ok(n, p, op)                       \
     trace(ATOMICS, 1, _upd2_ok,                 \
           PUN(dptr, n),                         \
-          (dptr *) (p),                         \
+          (volatile dptr *) (p),                         \
           (dptr *) (op))
 
 #define upd2_won(n, p, op)                      \
     trace(ATOMICS, 1, _upd2_won,                \
           PUN(dptr, n),                         \
-          (dptr *) (p),                         \
+          (volatile dptr *) (p),                         \
           (dptr *) (op))
 
 #define pudef (howok, "%", *a == WON ? "WON" : *a == OK ? "OK" : "NOT")
