@@ -2,6 +2,7 @@
 
 #include <race.h>
 #include <asm.h>
+#include <stdatomic.h>
 
 #define RACE_NS 9000
 #define RACE_PCNT (E_DBG_LVL ? 30 : 0)
@@ -20,35 +21,37 @@ void fuzz_atomics(){
 uptr _xadd(iptr s, volatile uptr *p){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return (xadd)(s, p);
+    return atomic_fetch_add(p, s);
 }
 
 uptr _xchg(uptr s, volatile uptr *p){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return (xchg)(s, p);
+    return atomic_exchange(p, s);
 }
 
-dptr _xchg2(dptr s, volatile dptr *p){
-    assert(aligned_pow2(p, sizeof(*p)));
-    fuzz_atomics();
-    while(1){
-        dptr o = *p;
-        if(cmpxchg2(s, p, o) == o)
-            return o;
-    }
-}
+/* dptr _xchg2(dptr s, volatile dptr *p){ */
+/*     assert(aligned_pow2(p, sizeof(*p))); */
+/*     fuzz_atomics(); */
+/*     while(1){ */
+/*         dptr o = *p; */
+/*         if(cmpxchg2(s, p, o) == o) */
+/*             return o; */
+/*     } */
+/* } */
 
 uptr _cas(uptr n, volatile uptr *p, uptr old){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return cmpxchg(n, p, old);
+    atomic_compare_exchange_strong(p, &old, n);
+    return old;
 }
 
 dptr _cas2(dptr n, volatile dptr *p, dptr old){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return cmpxchg2(n, p, old);
+    atomic_compare_exchange_strong(p, &old, n);
+    return old;
 }
 
 howok _cas_ok(uptr n, volatile uptr *p, uptr *old){
