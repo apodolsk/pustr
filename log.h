@@ -9,6 +9,7 @@
 #define log(...) 0
 #define pp(as...) (as)
 #define ppl(lvl, as...) (as)
+#define lppl(lvl, as...) (as)
 #define trace(module, lvl, f, as...) f(as)
 #else
 

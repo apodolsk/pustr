@@ -1,6 +1,8 @@
 #pragma once
 #include <dial_macros.h>
 
+#define alignof(e) _Alignof(e)
+
 #define CASSERT(e) _Static_assert(e, #e)
 /* Safe in expressions, wherein _Static_assert is incorrect because it's a declaration. */
 #define CASSERT_EXP(e) ((void)sizeof(char[1 - 2*!(e)]))
