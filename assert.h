@@ -1,15 +1,12 @@
 #pragma once
 #include <errors.h>
 
-#define assert(expr...)                                              \
-    ass_cond(1, E_DBG_LVL,                                           \
-             (!(expr) ? TODO("Failed assertion: %.", #expr), 1 : 1), \
-             0 ? expr : 0)
+#define assert(e...) assertl(1, e)
 
-#define assertl(req_dbg_lvl, expr...)                                \
-    ass_cond(req_dbg_lvl, E_DBG_LVL,                                 \
-             (!(expr) ? TODO("Failed assertion: %.", #expr), 1 : 1), \
-             0 ? expr : 0)
+#define assertl(req_dbg_lvl, e...)                                  \
+    ass_cond(req_dbg_lvl, E_DBG_LVL,                              \
+             (!(e) ? TODO("Failed assertion: %.", #e), 1 : 1),      \
+             0 ? e : 0)
 
 #define ass_cond(req, verb, e, or...)               \
     CONCAT(ass_cond, CONCAT2(verb, req)) (e, or)

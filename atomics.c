@@ -4,7 +4,7 @@
 #include <asm.h>
 #include <stdatomic.h>
 
-#define RACE_NS 9000
+#define RACE_NS 900
 #define RACE_PCNT (E_DBG_LVL ? 30 : 0)
 #define RACE_MOD 2
 

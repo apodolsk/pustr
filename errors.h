@@ -21,117 +21,114 @@
 #define _SECOND(a, b, ...) b
 #define _THIRD(a, b, c) c
 
-#define LOOKUP _LOOKUP(CONCAT(E_, MODULE))
-#define _LOOKUP(mod) CONCAT2(_LOOKUP, NUM_ARGS(mod))(mod)
-#define _LOOKUP1(mod) DBG, BRK, PRNT
+#define E_LOOKUP _LOOKUP(CONCAT(E_, MODULE))
+#define _LOOKUP(emod) CONCAT2(_LOOKUP, NUM_ARGS(emod))(emod)
+#define _LOOKUP1(emod) DBG, BRK, PRNT
 #define _LOOKUP3(a, b, c) a, b, c
 
-#define E_DBG_LVL FIRST(LOOKUP)
-#define E_BREAK_LVL SECOND(LOOKUP)
-#define E_PRINT_LVL THIRD(LOOKUP)
+#define E_DBG_LVL FIRST(E_LOOKUP)
+#define E_BREAK_LVL SECOND(E_LOOKUP)
+#define E_PRINT_LVL THIRD(E_LOOKUP)
+
+#define if_dbgl(l, e) err_cond(l, E_DBG_LVL, e, (void) 0)
+#define if_dbg(e) dbgl(1, e)    
 
 extern noreturn void panic(const char *, ...);
 
 /* --- Fatal Errors (for the kernel) --- */
 
-#define EWTF(fmt, as...)                                \
-    ({                                                  \
-        elog(0, "This can't be. %:%:%. " fmt    \
-             , __FILE__ ,__func__, __LINE__, ##as);     \
-        ebreakpoint(0);                                      \
-        panic("WTF!");                                  \
+#define EWTF(fmt, as...)                            \
+    ({                                              \
+        elog(0, "This can't be. %:%:%. " fmt        \
+             , __FILE__ ,__func__, __LINE__, ##as); \
+        ebreakpoint(0);                             \
+        panic("WTF!");                              \
     })
 
-/* #define TODO(fmt, as...)                                            \ */
-/*     ({                                                              \ */
-/*         elog(0, "My creator has abandoned me. %:%:%. " fmt  \ */
-/*              , __FILE__ , __func__ , __LINE__, ##as);               \ */
-/*         ebreakpoint(0);                                             \ */
-/*         panic("TODO!");                                             \ */
-/*     })                                             */
-
-#define TODO(fmt, as...)                                            \
-    ({                                                              \
-        ebreakpoint(0);                                             \
-        panic("TODO!");                                             \
-    })                                            
-
+#define TODO(fmt, as...)                                        \
+    ({                                                          \
+                                                                \
+        elog(0, "My creator has abandoned me. %:%:%. " fmt      \
+             , __FILE__ , __func__ , __LINE__, ##as);           \
+        ebreakpoint(0);                                         \
+        panic("TODO!");                                         \
+    })
 
 /* --- Recoverable Errors (for the kernel) --- */
 
 /* Sequel to EARG on the NES. */
-#define SUPER_EARG(fmt, as...)                          \
-    ({                                                  \
-        elog(1, "Super bad input error. %:%:%. "fmt,    \
-             __FILE__, __func__, __LINE__, ##as);       \
-        ebreakpoint(1);                                 \
-        (dptr) -1;                                       \
+#define SUPER_EARG(fmt, as...)                                      \
+    ({                                                              \
+        elog(1, "Super bad input error. %:%:%. "fmt,                \
+             __FILE__, __func__, __LINE__, ##as);                   \
+        ebreakpoint(1);                                             \
+        (dptr) -1;                                                  \
     })
 
-#define OVERCOMMIT_ERROR(fmt, as...)                    \
-    ({                                                  \
-        elog(2,"Overcommit error. %:%:%. "      \
-             fmt, __FILE__, __func__, __LINE__, ##as);  \
-        ebreakpoint(2);                                      \
-        (dptr) -1;                                            \
+#define OVERCOMMIT_ERROR(fmt, as...)                                \
+    ({                                                              \
+        elog(2,"Overcommit error. %:%:%. "                          \
+             fmt, __FILE__, __func__, __LINE__, ##as);              \
+        ebreakpoint(2);                                             \
+        (dptr) -1;                                                  \
     })
 
-#define SUPER_RARITY(fmt, as...)                        \
-    ({                                                  \
-        elog(2,"Super rare event. %:%:%. "              \
-             fmt, __FILE__, __func__, __LINE__, ##as);  \
-        ebreakpoint(2);                                 \
-        (dptr) -1;                                      \
-    })                                                  \
+#define SUPER_RARITY(fmt, as...)                                    \
+    ({                                                              \
+        elog(2,"Super rare event. %:%:%. "                          \
+             fmt, __FILE__, __func__, __LINE__, ##as);              \
+        ebreakpoint(2);                                             \
+        (dptr) -1;                                                  \
+    })                                                              \
 
-#define EOOR(fmt, as...)                            \
-    ({                                              \
-        elog(3,"Out of resources. %:%:%. " fmt      \
-             , __FILE__, __func__, __LINE__, ##as); \
-        ebreakpoint(3);                             \
-        (dptr) EOOR;                                \
+#define EOOR(fmt, as...)                                        \
+    ({                                                          \
+      elog(3,"Out of resources. %:%:%. " fmt                    \
+           , __FILE__, __func__, __LINE__, ##as);               \
+      ebreakpoint(3);                                           \
+      (dptr) EOOR;                                              \
     })                                                         
 
         
-#define EARG(fmt, as...)                            \
-    ({                                              \
-        elog(4, "Input error. %:%:%. " fmt          \
-             , __FILE__, __func__, __LINE__, ##as); \
-        ebreakpoint(4);                             \
-        (dptr) EARG;                                \
+#define EARG(fmt, as...)                                        \
+    ({                                                          \
+      elog(4, "Input error. %:%:%. " fmt                        \
+           , __FILE__, __func__, __LINE__, ##as);               \
+      ebreakpoint(4);                                           \
+      (dptr) EARG;                                              \
     })
 
-#define RARITY(fmt, as...)                              \
-    ({                                                  \
-        elog(5, "Rarity. %:%:%. "               \
-             fmt, __FILE__, __func__, __LINE__, ##as);  \
-        ebreakpoint(5);                                      \
-    })                                                  \
+#define RARITY(fmt, as...)                                  \
+    ({                                                      \
+      elog(5, "Rarity. %:%:%. "                             \
+               fmt, __FILE__, __func__, __LINE__, ##as);    \
+      ebreakpoint(5);                                       \
+    })                                                      \
 
 /* --- Helpers --- */
 
-#define elog(lvl, fmt, ...)                                     \
+#define elog(lvl, fmt, ...)                                             \
     err_cond(lvl, E_PRINT_LVL, lprintf(fmt, ##__VA_ARGS__), 0)
 
-#define ebreakpoint(lvl)                        \
+#define ebreakpoint(lvl)                                    \
     err_cond(lvl, E_BREAK_LVL, breakpoint(), 0)
 
 /* TODO: macro-expansion into multiple macro args not happening. Same old
    shit. */
-#define KERNPTR_MSG(addr)                                   \
-    /* "Forbidden pointer to kern memory: %", (void *) addr */
+#define KERNPTR_MSG(addr)                                               \
+                /* "Forbidden pointer to kern memory: %", (void *) addr */
 
-#define BADWRITE_MSG(addr)                      \
-    /* "Failed to write to %", (void *) addr */
+#define BADWRITE_MSG(addr)                                  \
+                /* "Failed to write to %", (void *) addr */
 
-#define BADREAD_MSG(addr)                       \
-    /* "Failed to read from: %", (void *) addr      */
+#define BADREAD_MSG(addr)                                           \
+                /* "Failed to read from: %", (void *) addr      */
 
-#define BADMEM_MSG(addr)                                     \
-    /* "Unreadable or unwriteable memory: %.", (void *) addr    */
+#define BADMEM_MSG(addr)                                                \
+                /* "Unreadable or unwriteable memory: %.", (void *) addr    */
 
-#define err_cond(req, verb, e, or...)                   \
-    CONCAT(log_cond, CONCAT2(verb, req)) (e, or)
+#define err_cond(req, verb, e, or...)                           \
+    CONCAT(err_cond, CONCAT2(verb, req)) (e, or)
 
 #define err_cond00(e, or...) e
 #define err_cond01(e, or...) or
