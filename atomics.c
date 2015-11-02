@@ -6,8 +6,8 @@
 #include <stdatomic.h>
 
 #define RACE_NS 900
-#define RACE_PCNT (E_DBG_LVL ? 30 : 0)
-#define RACE_MOD 2
+#define RACE_PCNT (E_DBG_LVL ? 20 : 0)
+#define RACE_MOD 1
 
 extern uptr (xadd)(iptr s, volatile uptr *p);
 extern uptr (xchg)(uptr s, volatile uptr *p);
