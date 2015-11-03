@@ -1,5 +1,5 @@
 #define MODULE ATOMICS
-#define E_ATOMICS 0, LVL_TODO, LVL_TODO
+#define E_ATOMICS 1, LVL_TODO, LVL_TODO
 
 #include <race.h>
 #include <asm.h>
