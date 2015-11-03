@@ -31,7 +31,7 @@
 #define E_PRINT_LVL THIRD(E_LOOKUP)
 
 #define if_dbgl(l, e) err_cond(l, E_DBG_LVL, e, (void) 0)
-#define if_dbg(e) dbgl(1, e)    
+#define if_dbg(e) if_dbgl(1, e)    
 
 extern noreturn void panic(const char *, ...);
 
