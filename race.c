@@ -8,8 +8,8 @@ void race(cnt maxns, uint pcnt, uint idmod){
     if(!pcnt)
         return;
     bool r = T->racing;
-    T->racing = true;
-    if(!r && randpcnt(pcnt)){
+    if(!r && interrupts_enabled() && randpcnt(pcnt)){
+        T->racing = true;
         kyield((dptr) -1);
         T->racing = false;
     }
