@@ -30,11 +30,11 @@
 #include <dial_util.h>
 #include <wrand.h>
 
+#include <runtime_config.h>    
 #include <syscall.h>
 
 #include <atomics.h>
 
-#include <runtime_config.h>    
 #include <stdlib.h>
 
 #endif

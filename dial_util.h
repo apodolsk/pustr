@@ -11,7 +11,7 @@
 #define ARR_LEN_2D(a) (sizeof(a)/sizeof(**(a)))
 
 /** 
- * If p, &ret->field == p. Iff !p, ret == NULL.
+ * If p, &((container_t *) ret)->field == p, else ret == NULL.
  */
 #define cof container_of
 #define container_of(p, container_t, field)                             \
