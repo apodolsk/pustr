@@ -6,6 +6,7 @@
 #include <stdarg.h>
 
 #define NTYPES 0
+#define TRACE_START 0 
 
 #ifdef NPUSTR
 #define pudef_dflt(...)
@@ -83,6 +84,7 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
 /* To avoid double-eval of function args. */
 #define pu_strfmt(_, __, ___) %
 
+#if TRACE_START
 #define putrace(print, fun, as...)                                      \
     ({                                                                  \
         PUMAP_NOCOMMA(estore, __pu, as);                                \
@@ -96,7 +98,7 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
             __pu_ret;                                                   \
         __pu_ret =                                                      \
         choose(is_void(fun(as)),                                        \
-               (fun(PUMAP(eref, __pu, as)), 0),                            \
+               (fun(PUMAP(eref, __pu, as)), 0),                         \
                fun(PUMAP(eref, __pu, as)));                             \
         choose(is_void(fun(as)),                                        \
                ({                                                       \
@@ -111,6 +113,33 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
                    __pu_ret;                                            \
                }));                                                     \
     })
+#else
+#define putrace(print, fun, as...)                                      \
+    ({                                                                  \
+        PUMAP_NOCOMMA(estore, __pu, as);                                \
+        typeof(choose(is_void(fun(as)),                                 \
+                      1,                                                \
+                      fun(as)))                                         \
+        __pu_ret =                                                      \
+        choose(is_void(fun(as)),                                        \
+               (fun(PUMAP(eref, __pu, as)), 0),                         \
+               fun(PUMAP(eref, __pu, as)));                             \
+        choose(is_void(fun(as)),                                        \
+               ({                                                       \
+                   print("%("STRLIT(PUMAP(pu_strfmt, _, as))            \
+                         ") in %:%:%", #fun                             \
+                         COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),        \
+                         __FILE__, __func__, __LINE__);                 \
+               }),                                                      \
+               ({                                                       \
+                   print("% = %("STRLIT(PUMAP(pu_strfmt, _, as))        \
+                         ") in %:%:%", __pu_ret, #fun                   \
+                         COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),        \
+                         __FILE__, __func__, __LINE__);                 \
+                   __pu_ret;                                            \
+               }));                                                     \
+    })
+#endif
 
 #define DEFAULT_TYPES                                       \
     bool, int8_t, int16_t, int32_t, int64_t,                \
