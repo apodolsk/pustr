@@ -1,7 +1,7 @@
 #include <thread.h>
 #include <asm.h>
 
-static rand_info epool;
+static rand_tls epool;
 
 void rand_add_entropy(uint e){
     /* TODO: synchronization. Should be ok as is, but think. */
