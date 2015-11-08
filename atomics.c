@@ -1,12 +1,12 @@
 #define MODULE ATOMICS
 #undef E_ATOMICS
-#define E_ATOMICS 0, LVL_TODO, LVL_TODO
+#define E_ATOMICS 1, LVL_TODO, LVL_TODO
 
 #include <race.h>
 #include <asm.h>
 
 #define RACE_NS 900
-#define RACE_PCNT (E_DBG_LVL ? 50 : 0)
+#define RACE_PCNT (E_DBG_LVL ? 20 : 0)
 #define RACE_MOD 1
 
 extern uptr (xadd)(iptr s, volatile uptr *p);

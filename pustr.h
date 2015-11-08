@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 #define NTYPES 0
-#define TRACE_START 0 
+#define TRACE_START 1
 
 #ifdef NPUSTR
 #define pudef_dflt(...)

@@ -100,7 +100,7 @@ static int must(int i){
 }
 
 static err muste(err e){
-    assert(!e);
+    assert(e >= 0);
     return e;
 }
 
