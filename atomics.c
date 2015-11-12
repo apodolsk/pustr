@@ -1,6 +1,6 @@
 #define MODULE ATOMICS
 #undef E_ATOMICS
-#define E_ATOMICS 1, LVL_TODO, LVL_TODO
+#define E_ATOMICS 0, LVL_TODO, LVL_TODO
 
 #include <race.h>
 #include <asm.h>
@@ -90,6 +90,17 @@ howok _upd2_ok(dptr n, volatile dptr *p, dptr *old){
 
 bool _upd2_won(dptr n, volatile dptr *p, dptr *old){
     return _upd2_ok(n, p, old) == WON;
+}
+
+howok _upd_ok(uptr n, volatile uptr *p, uptr *old){
+    howok r = _cas_ok(n, p, old) == WON;
+    if(r == WON)
+        *old = n;
+    return r;
+}
+
+bool _upd_won(uptr n, volatile uptr *p, uptr *old){
+    return _upd_ok(n, p, old) == WON;
 }
 
 uptr _atomic_read(volatile uptr *p){

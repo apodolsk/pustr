@@ -28,10 +28,11 @@ typedef enum{
 
 howok _cas_ok(uptr n, volatile uptr *p, uptr *old);
 bool _cas_won(uptr n, volatile uptr *p, uptr *old);
-
 howok _cas2_ok(dptr n, volatile dptr *p, dptr *old);
 bool _cas2_won(dptr n, volatile dptr *p, dptr *old);
 
+howok _upd_ok(uptr n, volatile uptr *p, uptr *old);
+bool _upd_won(uptr n, volatile uptr *p, uptr *old);
 howok _upd2_ok(dptr n, volatile dptr *p, dptr *old);
 bool _upd2_won(dptr n, volatile dptr *p, dptr *old);
 
@@ -104,6 +105,19 @@ bool _upd2_won(dptr n, volatile dptr *p, dptr *old);
           PUN(dptr, n),                         \
           (volatile dptr *) (p),                \
           (dptr *) (op))
+
+#define upd_ok(n, p, op)                        \
+    trace(ATOMICS, 1, _upd_ok,                  \
+          PUN(uptr, n),                         \
+          (volatile uptr *) (p),                \
+          (uptr *) (op))
+
+#define upd_won(n, p, op)                       \
+    trace(ATOMICS, 1, _upd_won,                 \
+          PUN(uptr, n),                         \
+          (volatile uptr *) (p),                \
+          (uptr *) (op))
+
 
 #define pudef (howok, "%", *a == WON ? "WON" : *a == OK ? "OK" : "NOT")
 #include <pudef.h>
