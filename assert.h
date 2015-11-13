@@ -4,7 +4,7 @@
 #define assert(e...) assertl(1, e)
 
 #define assertl(req_dbg_lvl, e...)                                  \
-    ass_cond(req_dbg_lvl, E_DBG_LVL,                              \
+    ass_cond(req_dbg_lvl, E_DBG_LVL,                                \
              (!(e) ? TODO("Failed assertion: %.", #e), 1 : 1),      \
              0 ? e : 0)
 
