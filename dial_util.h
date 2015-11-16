@@ -104,9 +104,9 @@ static err muste(err e){
     return e;
 }
 
-static void *mustp(void *p){
+static void *mustp(const void *p){
     assert(p);
-    return p;
+    return (void *) p;
 }
 
 #define in_struct(p, s)                                         \
