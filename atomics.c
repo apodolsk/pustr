@@ -123,12 +123,21 @@ void _atomic_write2(dptr n, volatile dptr *p){
             return;
 }
 
-uptr _condxadd(uptr n, volatile uptr *p, uptr lim){
+/* TODO: this behaves differently from xsub w.r.t lim. Could be
+   surprising, and discards information about *p. Lots of tests use this
+   scheme, though. */
+uptr _xadd_iff(uptr a, volatile uptr *p, uptr lim){
     for(uptr r = *p;;){
         assert(r < lim);
-        if(r + n >= lim)
+        if(r + a >= lim)
             return lim;
-        if(_cas_won(r + n, p, &r))
+        if(_cas_won(r + a, p, &r))
             return r;
     }
+}
+
+uptr _xsub_iff(uptr s, volatile uptr *p){
+    for(uptr r = *p;;)
+        if(r < s || _cas_won(r - s, p, &r))
+            return r;
 }
