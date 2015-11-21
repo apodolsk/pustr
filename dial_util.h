@@ -104,7 +104,7 @@ static err muste(err e){
     return e;
 }
 
-static void *mustp(const void *p){
+static void *mustp(const volatile void *p){
     assert(p);
     return (void *) p;
 }
