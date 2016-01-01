@@ -36,14 +36,14 @@ static inline void *subtract_if_not_null(uptr p, cnt s){
         })                                      \
 
 
-#define tryp(p, catch...)({                     \
-            typeof(p) try_p = p;                \
-            if(!try_p){                         \
-                catch;                          \
-            }                                   \
-            try_p;                              \
-        })                                      \
-
+static inline void call_nullary(void (**f)(void)){
+    (*f)();
+}
+#define wrap(at_enter, at_exit)                                         \
+    for(__attribute__((cleanup(call_nullary)))                          \
+            void (*__at_exit)(void)                                     \
+            = (at_enter(), NULL);                                       \
+        !seq_first(__at_exit, __at_exit = at_exit);)
 
 /* Clang has a buggy statement-expression implementation. */
 #define PUN(t, s) ({                                                \
@@ -65,7 +65,6 @@ static inline void *subtract_if_not_null(uptr p, cnt s){
             0, ##as;                            \
             __first;                            \
         })
-
 
 /* #define PUN(t, s) (*(t*)(typeof(s)[]){s}) */
 
