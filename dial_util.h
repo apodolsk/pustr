@@ -194,6 +194,7 @@ static inline uptr ualign_up(uptr addr, size size){
 
 static inline void no_op(){}
 static inline err zero(){return 0;}
+static inline bool return_false(){return false;}
 
 static inline bool ptr_overflow(const void *b, cnt off){
     return 0 - (uptr) b < off;
