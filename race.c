@@ -5,16 +5,12 @@
 
 extern err kyield(tid t);
 void race(cnt maxns, uint pcnt, uint idmod){
-    if(!pcnt)
+    if(!pcnt || T->racing || !randpcnt(pcnt))
         return;
-    bool r = T->racing;
-    if(!r && interrupts_enabled() && randpcnt(pcnt)){
-        T->racing = true;
+    T->racing = true;
+    if(interrupts_enabled()){
         kyield((dptr) -1);
-        T->racing = false;
-    }
-    /* if(!T->racing && interrupts_enabled() && randpcnt(pcnt >> 1)){ */
-    /*     (kyield)((dptr) -1); */
-    /* }else if(!mod_pow2(PUN(uptr, get_dbg_id()), idmod) && randpcnt(pcnt)) */
-    /*     nanosleep(&(struct timespec){.tv_nsec = rand() % maxns}, NULL); */
+    }else
+        nanosleep(&(struct timespec){.tv_nsec = rand() % maxns}, NULL);
+    T->racing = false;
 }
