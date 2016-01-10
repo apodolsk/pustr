@@ -35,28 +35,27 @@ static inline void *subtract_if_not_null(uptr p, cnt s){
             __rup_copy;                         \
         })                                      \
 
+/* Prepends the subsequent code block B with a call to (void (*)())
+   at_enter. Any exit from B - including via goto or return -
+   will be followed by a call to (void (*)()) at_exit.
 
-static inline void call_nullary(void (**f)(void)){
-    (*f)();
-}
+   The break keyword will trigger an exit from B, rather than its
+   containing loop.
+*/
 #define wrap(at_enter, at_exit)                                         \
     for(__attribute__((cleanup(call_nullary)))                          \
             void (*__at_exit)(void)                                     \
             = (at_enter(), NULL);                                       \
         !seq_first(__at_exit, __at_exit = at_exit);)
+static inline void call_nullary(void (**f)(void)){
+    (*f)();
+}
 
-/* Clang has a buggy statement-expression implementation. */
+/* NB: Clang had a buggy statement-expression implementation. */
 #define PUN(t, s) ({                                                \
         CASSERT(sizeof(s) == sizeof(t));                            \
         ((union {__typeof__(s) str; t i;}) (s)).i;                  \
         })
-
-/* #define PUN(t, s)                                               \ */
-/*     (assert(sizeof(s) == sizeof(t)),                            \ */
-/*      ((union {__typeof__(s) str; t i;}) (s)).i) */
-
-/* #define PUN(t, s)                                               \ */
-/*     (((union {__typeof__(s) str; t i;}) (s)).i) */
 
 /* Execute (first, as) with comma operator sequencing, except evaluate to
    first rather than the last argument. */
@@ -65,8 +64,6 @@ static inline void call_nullary(void (**f)(void)){
             0, ##as;                            \
             __first;                            \
         })
-
-/* #define PUN(t, s) (*(t*)(typeof(s)[]){s}) */
 
 #define eq(a, b) ({ typeof(b) __eqa = a; (PUN(uptr, __eqa) == PUN(uptr, b)); })
 
@@ -77,7 +74,6 @@ static inline void call_nullary(void (**f)(void)){
     })                                             \
 
 
-/* #define eq2(a, b) ({ typeof(b) __eq2a = a; (PUN(dptr, __eq2a) == PUN(dptr, b)); }) */
 #define eq2(a, b) _eq2(PUN(dptr, a), PUN(dptr, b))
 static inline bool _eq2(dptr a, dptr b){
     return a == b;
@@ -93,6 +89,7 @@ static inline uptr _umax(uptr a, uptr b){
     return a < b ? b : a;
 }
 
+/* TODO: reporting would be better if these were macros. */
 static int must(int i){
     assert(i);
     return i;
@@ -115,10 +112,6 @@ static void *mustp(const volatile void *p){
     ((uptr) (p) >= (uptr) (s) && (uptr) (p) < (uptr)(s) + sizeof(s))   \
 
 #define is_pow2(n) ((n) && !((n) & ((n) - 1)))
-
-/* static inline bool is_pow2(uint n){ */
-/*     return n && !(n & (n - 1)); */
-/* } */
 
 static inline uint div_pow2(uint n, uint by){
     if(!n)
@@ -196,6 +189,7 @@ static inline void no_op(){}
 static inline err zero(){return 0;}
 static inline bool return_false(){return false;}
 
+/* TODO: more thought here. */
 static inline bool ptr_overflow(const void *b, cnt off){
     return 0 - (uptr) b < off;
 }
