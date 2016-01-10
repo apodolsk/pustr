@@ -3,6 +3,7 @@
 #ifndef __ASSEMBLER__
 
 #define ainline __attribute__((always_inline))
+#define returns_twice __attribute__((returns_twice))
 #define noinline __attribute__((noinline))
 #define pure __attribute__((pure))
 #define constfun __attribute__((const))
