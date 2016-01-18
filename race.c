@@ -3,7 +3,7 @@
 #include <tid.h>
 #include <thread.h>
 
-extern err kyield(tid t);
+extern err (kyield)(tid t);
 void race(cnt maxns, uint pcnt, uint idmod){
     if(!pcnt || T->racing || !randpcnt(pcnt))
         return;
