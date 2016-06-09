@@ -17,9 +17,10 @@ typedef enum{
     EOK = 0,
     EARG = -1,
     EOOR = -2,
+    EINTR = -3,
     
     EMAX = EOK,
-    EMIN = EOOR,
+    EMIN = EINTR,
 } err;
 typedef int ecnt;
 
@@ -44,6 +45,6 @@ typedef uint64_t udptr;
 #define UPTR_MAX UINTPTR_MAX
 #define CNT_MAX UPTR_MAX
 
-#define WORDBITS (8 * sizeof(void *))
+#define WORDBITS (CHAR_BIT * sizeof(void *))
 
 #endif

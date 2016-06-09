@@ -26,8 +26,7 @@ static inline void *subtract_if_not_null(uptr p, cnt s){
 #define cof_aligned_pow2(p, container_t)                           \
     ((container_t *) _align_down_pow2(p, sizeof(container_t)))
 
-/* Record update. For each arg of form '.f e' in changes, ret.f == e. If
-   field f' doesn't occur in args, ret.f' == orig.f'. */
+/* TODO */
 #define RUP_PFX(fld,_, __) __rup_copy fld
 #define rup(orig, changes...)({                 \
             typeof(orig) __rup_copy = orig;     \
