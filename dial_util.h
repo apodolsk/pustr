@@ -88,22 +88,24 @@ static inline uptr _umax(uptr a, uptr b){
     return a < b ? b : a;
 }
 
-/* TODO: reporting would be better if these were macros. */
-static int must(int i){
-    assert(i);
-    return i;
-}
+#define must(i)({                               \
+            int _i = i;                         \
+            assert(_i);                         \
+            _i;                                 \
+        })
 
-static err muste(err e){
-    assert(e >= 0);
-    return e;
-}
+#define muste(e)({                              \
+            err _e = e;                         \
+            assert(_e >= 0);                    \
+            _e;                                 \
+        })                             
 
-static void *mustp(const volatile void *p){
-    assert(p);
-    return (void *) p;
-}
-
+#define mustp(p)({                              \
+             const volatile void *_p = p;       \
+             assert(_p);                        \
+             (typeof(p)) _p;                    \
+        })
+            
 #define in_struct(p, s)                                         \
     ((uptr) (p) >= (uptr) (s) && (uptr) (p) < (uptr)((s) + 1))  \
 

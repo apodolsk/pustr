@@ -21,7 +21,7 @@
                  lprintf(STRLIT(MAP(NAMEFMT,, ##as)), MAP(eref, __pp, as)); \
                  MAP(eref, __pp, as);                                   \
              }),                                                        \
-             as)
+             (as))
 #define pp(as...) ppl(1, ##as)
 
 #define LINEFMT(a, _, __) a:%\n
@@ -32,7 +32,7 @@
                  lprintf(STRLIT(MAP_NOCOMMA(LINEFMT,, ##as)), MAP(eref, __pp, as)); \
                  MAP(eref, __pp, as);                                   \
              }),                                                        \
-             as)
+             (as))
 
 
 

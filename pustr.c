@@ -1,6 +1,8 @@
 #include <pustr.h>
 #include <stdio.h>
 
+#ifndef NPUSTR
+
 size_t puvsnprintf(char *b, size_t max, const char *fmt, va_list args){
     size_t l = 0;
     for(const char *c = fmt; *c != '\0'; c++){
@@ -81,3 +83,5 @@ pudef_dflt(uint16_t,  "%"PRIu16)
 pudef_dflt(uint32_t, "%"PRIu32)
 pudef_dflt(uint64_t, "%"PRIu64)
 pudef_dflt(double, "%f")
+
+#endif

@@ -15,7 +15,7 @@
 #define checked __attribute__((warn_unused_result))
 #define dbg __attribute__((unused))
 #define transparent __attribute__((transparent_union))
-#define visible_fun __attribute__((visibility("protected")))
+#define visible_fun __attribute__((visibility("default")))
 
 #include <whtypes.h>
 #include <limits.h>
