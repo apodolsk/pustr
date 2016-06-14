@@ -29,7 +29,7 @@ static inline void *subtract_if_not_null(uptr p, cnt s){
 /* TODO */
 #define RUP_PFX(fld,_, __) __rup_copy fld
 #define rup(orig, changes...)({                 \
-            typeof(orig) __rup_copy = orig;     \
+            __auto_type __rup_copy = orig;     \
             MAP(RUP_PFX,, changes);             \
             __rup_copy;                         \
         })                                      \
@@ -59,7 +59,7 @@ static inline void call_nullary(void (**f)(void)){
 /* Execute (first, as) with comma operator sequencing, except evaluate to
    first rather than the last argument. */
 #define seq_first(first, as...) ({              \
-            typeof(first) __first = first;      \
+            __auto_type __first = first;        \
             0, ##as;                            \
             __first;                            \
         })
@@ -67,7 +67,7 @@ static inline void call_nullary(void (**f)(void)){
 #define eq(a, b) ({ typeof(b) __eqa = a; (PUN(uptr, __eqa) == PUN(uptr, b)); })
 
 #define swap(ap, bp)({                             \
-            typeof(*(ap)) __swap_tmp = *(ap);      \
+            __auto_type __swap_tmp = *(ap);        \
             *(ap) = *(bp);                         \
             *(bp) = __swap_tmp;                    \
     })                                             \
@@ -101,9 +101,9 @@ static inline uptr _umax(uptr a, uptr b){
         })                             
 
 #define mustp(p)({                              \
-             const volatile void *_p = p;       \
-             assert(_p);                        \
-             (typeof(p)) _p;                    \
+            __auto_type _p = p;                 \
+            assert(_p);                         \
+            _p;                                 \
         })
             
 #define in_struct(p, s)                                         \
@@ -169,8 +169,8 @@ static inline uptr ualign_up(uptr addr, size size){
     (!mod_pow2(n, size))
 
 #define limit(n, ceil){                         \
-        typeof(n) __limit_n = n;                \
-        typeof(n) __limit_ceil = ceil;          \
+        __auto_type __limit_n = n;              \
+        __auto_type __limit_ceil = ceil;        \
         if(__ceil_n >= __limit_ceil)            \
             __limit_ceil - 1;                   \
         else                                    \

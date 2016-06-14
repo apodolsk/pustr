@@ -100,12 +100,12 @@
 
 typedef PU_T(pudef) CONCAT(putype_, NEXTNTYPES);
 
-static inline size_t CONCAT(pusnprint_, PU_T(pudef))
+static size_t CONCAT(pusnprint_, NEXTNTYPES)
 (char *b, size_t l, volatile const PU_T(pudef) *a){                 
     return pusnprintf(b, l, PU_FMT(pudef), PU_FARGS(pudef));
 }
 
-static inline size_t CONCAT(pusnprint_ptr_, PU_T(pudef))
+static size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)
 (char *b, size_t l, volatile const PU_T(pudef) **apt){
     volatile const PU_T(pudef) *a = *apt;
     if(!a)
@@ -114,15 +114,13 @@ static inline size_t CONCAT(pusnprint_ptr_, PU_T(pudef))
                       (volatile const void *) *apt, PU_FARGS(pudef));
 }
 
-static inline size_t CONCAT(pusnprint_, NEXTNTYPES)
-(char *b, size_t l, volatile const PU_T(pudef) *a){                 
-    return CONCAT(pusnprint_, PU_T(pudef))(b, l, a);
-}
+/* static size_t CONCAT(pusnprint_, NEXTNTYPES) */
+/* (char *b, size_t l, volatile const PU_T(pudef) *a) */
+/* __attribute__((alias(STRLIT(CONCAT(pusnprint_, PU_T(pudef)))))); */
 
-static inline size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)             
-(char *b, size_t l, volatile const PU_T(pudef) **apt){
-    return CONCAT(pusnprint_ptr_, PU_T(pudef))(b, l, apt);
-}
+/* static size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)              */
+/* (char *b, size_t l, volatile const PU_T(pudef) **apt) */
+/* __attribute__((alias(STRLIT(CONCAT(pusnprint_ptr_, PU_T(pudef)))))); */
 
 #if !NTYPES
 #undef NTYPES
