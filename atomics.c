@@ -1,6 +1,6 @@
 #define MODULE ATOMICS
 #undef E_ATOMICS
-#define E_ATOMICS 1, LVL_TODO, LVL_TODO
+#define E_ATOMICS 0, LVL_TODO, LVL_TODO
 
 #include <race.h>
 #include <asm.h>
@@ -28,7 +28,7 @@ uptr _xadd(iptr s, volatile uptr *p){
 uptr _xchg(uptr s, volatile uptr *p){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return (xchg)(s, p);
+    return __atomic_exchange_n(p, s, __ATOMIC_SEQ_CST);
 }
 
 dptr _xchg2(dptr s, volatile dptr *p){
@@ -41,16 +41,39 @@ dptr _xchg2(dptr s, volatile dptr *p){
     }
 }
 
+u32 __sync_val_compare_and_swap_4(volatile u32 *p, u32 old, u32 n){
+    asm volatile("lock cmpxchgl %2, %1"
+                 :"+a" (old), "+m" (*p)
+                 :"r" (n)
+                 :"cc", "memory");
+    return old;
+}
+
 uptr _cas(uptr n, volatile uptr *p, uptr old){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return (cmpxchg)(n, p, old);
+    return __sync_val_compare_and_swap(p, old, n);
+}
+
+i64 __sync_val_compare_and_swap_8(volatile i64 *p, i64 old, i64 n){
+    union {
+        struct{
+            u32 hi;
+            u32 lo;
+        };
+        u64 i;
+    } _n = {.i = n};
+    asm volatile("lock cmpxchg8b %1"
+                 :"+A" (old), "+m" (*p)
+                 :"c" (_n.hi), "b" (_n.lo)
+                 :"cc", "memory");
+    return old;
 }
 
 dptr _cas2(dptr n, volatile dptr *p, dptr old){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
-    return (cmpxchg2)(n, p, old);
+    return __sync_val_compare_and_swap(p, old, n);
 }
 
 howok _cas_ok(uptr n, volatile uptr *p, uptr *old){
