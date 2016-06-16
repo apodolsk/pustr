@@ -58,8 +58,8 @@ uptr _cas(uptr n, volatile uptr *p, uptr old){
 i64 __sync_val_compare_and_swap_8(volatile i64 *p, i64 old, i64 n){
     union {
         struct{
-            u32 hi;
             u32 lo;
+            u32 hi;
         };
         u64 i;
     } _n = {.i = n};
