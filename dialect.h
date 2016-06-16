@@ -14,6 +14,7 @@
 #define aliasing __attribute__((may_alias))
 #define checked __attribute__((warn_unused_result))
 #define dbg __attribute__((unused))
+#define used __attribute__((used))
 #define transparent __attribute__((transparent_union))
 #define visible_fun __attribute__((visibility("default")))
 
