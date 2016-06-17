@@ -9,50 +9,19 @@
 #define RACE_PCNT (E_DBG_LVL ? 20 : 0)
 #define RACE_MOD 1
 
-extern uptr (xadd)(iptr s, volatile uptr *p);
-extern uptr (xchg)(uptr s, volatile uptr *p);
-extern uptr (cmpxchg)(uptr n, volatile uptr *p, uptr old);
-extern dptr (cmpxchg2)(dptr n, volatile dptr *p, dptr old);
-    
-#include <time.h>
-void fuzz_atomics(){
-    race(RACE_NS, RACE_PCNT, RACE_MOD);
+u32 __sync_fetch_and_add_4(volatile u32 *p, u32 a){
+    asm volatile("lock xadd %0, %1"
+                 :"+r" (a), "+m" (*p));
+    return a;
 }
 
-uptr _xadd(iptr s, volatile uptr *p){
-    assert(aligned_pow2(p, sizeof(*p)));
-    fuzz_atomics();
-    return (xadd)(s, p);
-}
-
-uptr _xchg(uptr s, volatile uptr *p){
-    assert(aligned_pow2(p, sizeof(*p)));
-    fuzz_atomics();
-    return __atomic_exchange_n(p, s, __ATOMIC_SEQ_CST);
-}
-
-dptr _xchg2(dptr s, volatile dptr *p){
-    assert(aligned_pow2(p, sizeof(*p)));
-    fuzz_atomics();
-    while(1){
-        dptr o = *p;
-        if((cmpxchg2)(s, p, o) == o)
-            return o;
-    }
-}
-
+/* TODO: pretty much a mess. */
 u32 __sync_val_compare_and_swap_4(volatile u32 *p, u32 old, u32 n){
     asm volatile("lock cmpxchgl %2, %1"
                  :"+a" (old), "+m" (*p)
                  :"r" (n)
                  :"cc", "memory");
     return old;
-}
-
-uptr _cas(uptr n, volatile uptr *p, uptr old){
-    assert(aligned_pow2(p, sizeof(*p)));
-    fuzz_atomics();
-    return __sync_val_compare_and_swap(p, old, n);
 }
 
 i64 __sync_val_compare_and_swap_8(volatile i64 *p, i64 old, i64 n){
@@ -70,16 +39,86 @@ i64 __sync_val_compare_and_swap_8(volatile i64 *p, i64 old, i64 n){
     return old;
 }
 
+static
+bool _atomic_compare_exchange_4(volatile u32 *p, u32 *old, u32 n){
+    bool r;
+    asm volatile("lock cmpxchgl %3, %1"
+                 :"+a" (*old), "+m" (*p), "=@ccz" (r)
+                 :"r" (n)
+                 : "memory");
+    return r;
+}
+
+static
+bool _atomic_compare_exchange_8(volatile i64 *p, i64 *old, i64 n){
+    bool r;
+    union {
+        struct{
+            u32 lo;
+            u32 hi;
+        };
+        u64 i;
+    } _n = {.i = n};
+    asm volatile("lock cmpxchg8b %1"
+                 :"+A" (*old), "+m" (*p), "=@ccz" (r)
+                 :"c" (_n.hi), "b" (_n.lo)
+                 :"memory");
+    return r;
+}
+                      
+#include <time.h>
+void fuzz_atomics(){
+    race(RACE_NS, RACE_PCNT, RACE_MOD);
+}
+
+uptr _xadd(iptr s, volatile uptr *p){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    return __sync_fetch_and_add(p, s, __ATOMIC_SEQ_CST);
+}
+
+uptr _xchg(uptr s, volatile uptr *p){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    return __atomic_exchange_n(p, s, __ATOMIC_SEQ_CST);
+}
+
+dptr _xchg2(dptr s, volatile dptr *p){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    for(dptr o = *p;;)
+        if(_atomic_compare_exchange_8(p, &o, s))
+            return o;
+}
+
+
+uptr _cas(uptr n, volatile uptr *p, uptr old){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    return __sync_val_compare_and_swap(p, old, n);
+}
+
 dptr _cas2(dptr n, volatile dptr *p, dptr old){
     assert(aligned_pow2(p, sizeof(*p)));
     fuzz_atomics();
     return __sync_val_compare_and_swap(p, old, n);
 }
 
+bool _cas_won(uptr n, volatile uptr *p, uptr *old){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    return _atomic_compare_exchange_4(p, old, n);
+}
+
+
+bool _cas2_won(dptr n, volatile dptr *p, dptr *old){
+    assert(aligned_pow2(p, sizeof(*p)));
+    fuzz_atomics();
+    return _atomic_compare_exchange_8(p, old, n);
+}
+
 howok _cas_ok(uptr n, volatile uptr *p, uptr *old){
-    uptr o = *old;
-    *old = _cas(n, p, o);
-    if(*old == o)
+    if(_cas_won(n, p, old))
         return WON;
     if(*old == n)
         return OK;
@@ -87,43 +126,41 @@ howok _cas_ok(uptr n, volatile uptr *p, uptr *old){
 }
 
 howok _cas2_ok(dptr n, volatile dptr *p, dptr *old){
-    dptr o = *old;
-    *old = _cas2(n, p, o);
-    if(*old == o)
+    if(_cas2_won(n, p, old))
         return WON;
     if(*old == n)
         return OK;
     return NOT;
 }
 
-bool _cas_won(uptr n, volatile uptr *p, uptr *old){
-    return _cas_ok(n, p, old) == WON;
-}
-
-bool _cas2_won(dptr n, volatile dptr *p, dptr *old){
-    return _cas2_ok(n, p, old) == WON;
-}
-
-howok _upd2_ok(dptr n, volatile dptr *p, dptr *old){
-    howok r = _cas2_ok(n, p, old) == WON;
-    if(r == WON)
-        *old = n;
-    return r;
+bool _upd_won(uptr n, volatile uptr *p, uptr *old){
+    if(!_cas_won(n, p, old))
+        return false;
+    *old = n;
+    return true;
 }
 
 bool _upd2_won(dptr n, volatile dptr *p, dptr *old){
-    return _upd2_ok(n, p, old) == WON;
+    if(!_cas2_won(n, p, old))
+        return false;
+    *old = n;
+    return true;
 }
 
 howok _upd_ok(uptr n, volatile uptr *p, uptr *old){
-    howok r = _cas_ok(n, p, old) == WON;
-    if(r == WON)
-        *old = n;
-    return r;
+    if(_upd_won(n, p, old))
+        return WON;
+    if(*old == n)
+        return OK;
+    return NOT;
 }
 
-bool _upd_won(uptr n, volatile uptr *p, uptr *old){
-    return _upd_ok(n, p, old) == WON;
+howok _upd2_ok(dptr n, volatile dptr *p, dptr *old){
+    if(_upd2_won(n, p, old))
+        return WON;
+    if(*old == n)
+        return OK;
+    return NOT;
 }
 
 uptr _atomic_read(volatile uptr *p){
