@@ -1,5 +1,6 @@
 #pragma once
 #include <dial_macros.h>
+#include <stdlib.h>
 
 #define alignof(e) _Alignof(e)
 
@@ -195,4 +196,3 @@ static inline bool ptr_overflow(const void *b, cnt off){
     return 0 - (uptr) b < off;
 }
 
-char* stpcpy(char *dest, const char *src);

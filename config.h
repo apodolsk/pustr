@@ -4,8 +4,6 @@
 
 void breakpoint(void);
 
-bool interrupts_enabled(void);
-
 struct cpu;
 struct thread;
 

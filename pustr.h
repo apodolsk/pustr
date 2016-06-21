@@ -33,7 +33,7 @@ size_t _puprintf(const char *fmt, ...);
 size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
 
 #define pu_arg_of(a, _,  __)                                             \
-    &(pu_arg){(typeof(decay(a))[1]){a}, (typed_snprint) pusnprint_of(a)}
+    &(pu_arg){(volatile const typeof(decay(a))[1]){a}, (typed_snprint) pusnprint_of(a)}
 
 #define pusnprint_of(a)                                     \
     _Generic(decay(a),                                      \

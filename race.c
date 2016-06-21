@@ -2,6 +2,7 @@
 #include <wrand.h>
 #include <tid.h>
 #include <thread.h>
+#include <asm.h>
 
 extern err (kyield)(tid t);
 void race(cnt maxns, uint pcnt, uint idmod){

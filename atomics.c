@@ -17,7 +17,7 @@ u32 __sync_fetch_and_add_4(volatile u32 *p, u32 a){
 
 /* TODO: pretty much a mess. */
 u32 __sync_val_compare_and_swap_4(volatile u32 *p, u32 old, u32 n){
-    asm volatile("lock cmpxchgl %2, %1"
+    asm volatile("lock cmpxchg %2, %1"
                  :"+a" (old), "+m" (*p)
                  :"r" (n)
                  :"cc", "memory");
@@ -42,7 +42,7 @@ i64 __sync_val_compare_and_swap_8(volatile i64 *p, i64 old, i64 n){
 static
 bool _atomic_compare_exchange_4(volatile u32 *p, u32 *old, u32 n){
     bool r;
-    asm volatile("lock cmpxchgl %3, %1"
+    asm volatile("lock cmpxchg %3, %1"
                  :"+a" (*old), "+m" (*p), "=@ccz" (r)
                  :"r" (n)
                  : "memory");
