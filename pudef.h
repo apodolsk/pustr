@@ -101,17 +101,17 @@
 typedef PU_T(pudef) CONCAT(putype_, NEXTNTYPES);
 
 static size_t CONCAT(pusnprint_, NEXTNTYPES)
-(char *b, size_t l, volatile const PU_T(pudef) *a){                 
+(char *b, size_t l, const PU_T(pudef) *a){                 
     return pusnprintf(b, l, PU_FMT(pudef), PU_FARGS(pudef));
 }
 
 static size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)
-(char *b, size_t l, volatile const PU_T(pudef) **apt){
-    volatile const PU_T(pudef) *a = *apt;
+(char *b, size_t l, const PU_T(pudef) **apt){
+    const PU_T(pudef) *a = *apt;
     if(!a)
         return (size_t) snprintf(b, l, "("STRLIT(PU_T(pudef))" *)<nil>");
     return pusnprintf(b, l, "%:&"PU_FMT(pudef),
-                      (volatile const void *) *apt, PU_FARGS(pudef));
+                      (const volatile void *) *apt, PU_FARGS(pudef));
 }
 
 /* static size_t CONCAT(pusnprint_, NEXTNTYPES) */
