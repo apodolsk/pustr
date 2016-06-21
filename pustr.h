@@ -3,7 +3,8 @@
 #include <dial_macros.h>
 
 #include <inttypes.h>
-#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
 
 #define NTYPES 0
 #define TRACE_START 1
@@ -15,25 +16,26 @@
 #define putrace(_, f, as...) f(as)
 #else
 
-typedef size_t (*typed_snprint)(char *, size_t, volatile const void *);
+typedef size_t (*typed_snprint)(char *, size_t, const void *);
 
-typedef struct{
-    volatile const void *val;
+typedef const struct{
+    const void *val;
     typed_snprint typed_snprint;
 }pu_arg;
 
-size_t puvsnprintf(char *b, size_t max, const char *fmt, va_list args);
-
-#define puprintf(fmt, as...)                                            \
-    _puprintf(fmt COMMAPFX_IF_NZ(PUMAP(pu_arg_of, _, as)))
-size_t _puprintf(const char *fmt, ...);
+#define puprintf(fmt, as...)                    \
+    _puprintf(fmt, pu_args_of(as))
+size_t _puprintf(const char *fmt, const pu_arg *args);
 
 #define pusnprintf(b, l, fmt, as...)                \
-    _pusnprintf(b, l, fmt, PUMAP(pu_arg_of, _, as))
-size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
+    _pusnprintf(b, l, fmt, pu_args_of(as))
+size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
 
-#define pu_arg_of(a, _,  __)                                             \
-    &(pu_arg){(volatile const typeof(decay(a))[1]){a}, (typed_snprint) pusnprint_of(a)}
+#define pu_args_of(as...)                       \
+    ((pu_arg []){PUMAP(pu_arg_of, _, as)})
+
+#define pu_arg_of(a, _,  __)                                            \
+    (pu_arg){(const typeof(decay(a))[1]){a}, (typed_snprint) pusnprint_of(a)}
 
 #define pusnprint_of(a)                                     \
     _Generic(decay(a),                                      \
@@ -44,7 +46,7 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
              REPEAT_NOCOMMA(RCHOOSE, decay(a), NTYPES))     \
     
 #define pusnprint_of_dflt(t, _, __)                                     \
-    t  : &CONCAT(pusnprint_, t),                                        \
+        t                 : &CONCAT(pusnprint_, t),                     \
         volatile t        : &CONCAT(pusnprint_, t),                     \
         const t           : &CONCAT(pusnprint_, t),                     \
         volatile const t  : &CONCAT(pusnprint_, t),                     \
@@ -142,26 +144,71 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, ...);
 #endif
 
 #define DEFAULT_TYPES                                       \
-    bool, int8_t, int16_t, int32_t, int64_t,                \
+    _Bool, int8_t, int16_t, int32_t, int64_t,               \
     uint8_t, uint16_t, uint32_t, uint64_t, double, char
 
-#define puprot(t)                                                       \
-    size_t CONCAT(pusnprint_, t)(char *b, size_t l, volatile const t *a); \
-    size_t CONCAT(pusnprint_ptr_, t)(char *b, size_t l, volatile const t **a)
+/* #define puprot(t)                                                       \ */
+/*     size_t CONCAT(pusnprint_, t)(char *b, size_t l, const t *a);        \ */
+/*     size_t CONCAT(pusnprint_ptr_, t)(char *b, size_t l, const t **a) */
 
-puprot(bool);
-puprot(int8_t);
-puprot(int16_t);
-puprot(int32_t);
-puprot(int64_t);
-puprot(uint8_t);
-puprot(uint16_t);
-puprot(uint32_t);
-puprot(uint64_t);
-puprot(double);
-puprot(char);
+/* puprot(bool); */
+/* puprot(int8_t); */
+/* puprot(int16_t); */
+/* puprot(int32_t); */
+/* puprot(int64_t); */
+/* puprot(uint8_t); */
+/* puprot(uint16_t); */
+/* puprot(uint32_t); */
+/* puprot(uint64_t); */
+/* puprot(double); */
+/* puprot(char); */
 
-size_t pusnprint_dflt(char *b, size_t l, volatile const void **a);
+/* size_t pusnprint_dflt(char *b, size_t l, const void **a); */
+
+
+static inline
+size_t pusnprint_ptr_char(char *b, size_t l, const char **a){
+    if(!*a)
+        return (size_t) snprintf(b, l, "(char *)<nil>");
+    return (size_t) snprintf(b, l, "%s", *a);
+}
+
+static inline
+size_t pusnprint_char(char *b, size_t l, const char *a){
+    if(l)
+        *b = *a;
+    return 1;
+}
+
+static inline
+size_t pusnprint_dflt(char *b, size_t l, const void **a){
+    return (size_t) snprintf(b, l, "%p", *a);
+}
+
+#define pudef_dflt(t, fmt)                                          \
+    static inline                                                   \
+    size_t CONCAT(pusnprint_, t)                                    \
+    (char *b, size_t l, const t *a){                                \
+        return (size_t) snprintf(b, l, fmt, *a);                    \
+    }                                                               \
+    static inline                                                   \
+    size_t CONCAT(pusnprint_ptr_, t)                                \
+    (char *b, size_t l, const t **a){                               \
+        if(!*a)                                                     \
+            return (size_t) snprintf(b, l, "("STRLIT(t)" *)<nil>"); \
+        return (size_t) snprintf(b, l, "%p:&"fmt, *a, **a);         \
+    }
+
+pudef_dflt(_Bool, "%"PRId8)
+pudef_dflt(int8_t, "%"PRId8)
+pudef_dflt(int16_t, "%"PRId16)
+pudef_dflt(int32_t, "%"PRId32)
+pudef_dflt(int64_t, "%"PRId64)
+pudef_dflt(uint8_t, "%"PRIu8)
+pudef_dflt(uint16_t,  "%"PRIu16)
+pudef_dflt(uint32_t, "%"PRIu32)
+pudef_dflt(uint64_t, "%"PRIu64)
+pudef_dflt(double, "%f")
 
 #define PUMAP(FUNC, global, ...) CONCAT(PUMAP_ , NUM_ARGS(__VA_ARGS__)) \
     (FUNC, global, __VA_ARGS__)
