@@ -99,19 +99,19 @@
 
 typedef PU_T(pudef) CONCAT(putype_, NEXTNTYPES);
 
-static inline
+static
 size_t CONCAT(pusnprint_, NEXTNTYPES)
 (char *b, size_t max, const PU_T(pudef) *a){                 
-    return pusnprintf_inline(b, max, PU_FMT(pudef), PU_FARGS(pudef));
+    return pusnprintf(b, max, PU_FMT(pudef), PU_FARGS(pudef));
 }
 
-static inline
+static
 size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)
 (char *b, size_t max, const PU_T(pudef) **apt){
     const PU_T(pudef) *a = *apt;
     if(!a)
-        return (size_t) snprintf(b, max, "("STRLIT(PU_T(pudef))" *)<nil>");
-    return pusnprintf_inline(b, max, "%:&"PU_FMT(pudef),
+        return snprintf(b, max, "<nil>");
+    return pusnprintf(b, max, "%:&"PU_FMT(pudef),
                              (const void *) a, PU_FARGS(pudef));
 }
 
