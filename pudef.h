@@ -93,7 +93,6 @@
 #define PU_SECOND(_, a, ...) a
 #define PU_TAIL(_, __, a...) a
 
-/* pudef needs to be passed as an arg for it to be expanded? */
 #define PU_T(d) PU_FIRST d
 #define PU_FMT(d) PU_SECOND d
 #define PU_FARGS(d) PU_TAIL d
@@ -102,18 +101,18 @@ typedef PU_T(pudef) CONCAT(putype_, NEXTNTYPES);
 
 static inline
 size_t CONCAT(pusnprint_, NEXTNTYPES)
-(char *b, size_t l, const PU_T(pudef) *a){                 
-    return pusnprintf_inline(b, l, PU_FMT(pudef), PU_FARGS(pudef));
+(char *b, size_t max, const PU_T(pudef) *a){                 
+    return pusnprintf_inline(b, max, PU_FMT(pudef), PU_FARGS(pudef));
 }
 
 static inline
 size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)
-(char *b, size_t l, const PU_T(pudef) **apt){
+(char *b, size_t max, const PU_T(pudef) **apt){
     const PU_T(pudef) *a = *apt;
     if(!a)
-        return (size_t) snprintf(b, l, "("STRLIT(PU_T(pudef))" *)<nil>");
-    return pusnprintf_inline(b, l, "%:&"PU_FMT(pudef),
-                             (const volatile void *) *apt, PU_FARGS(pudef));
+        return (size_t) snprintf(b, max, "("STRLIT(PU_T(pudef))" *)<nil>");
+    return pusnprintf_inline(b, max, "%:&"PU_FMT(pudef),
+                             (const void *) a, PU_FARGS(pudef));
 }
 
 /* static size_t CONCAT(pusnprint_, NEXTNTYPES) */
