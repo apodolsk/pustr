@@ -97,16 +97,16 @@
 #define PU_FMT(d) PU_SECOND d
 #define PU_FARGS(d) PU_TAIL d
 
-typedef PU_T(pudef) CONCAT(putype_, NEXTNTYPES);
+typedef PU_T(pudef) PU_CONCAT(putype_, NEXTNTYPES);
 
 static
-size_t CONCAT(pusnprint_, NEXTNTYPES)
+size_t PU_CONCAT(pusnprint_, NEXTNTYPES)
 (char *b, size_t max, const PU_T(pudef) *a){                 
     return pusnprintf(b, max, PU_FMT(pudef), PU_FARGS(pudef));
 }
 
 static
-size_t CONCAT(pusnprint_ptr_, NEXTNTYPES)
+size_t PU_CONCAT(pusnprint_ptr_, NEXTNTYPES)
 (char *b, size_t max, const PU_T(pudef) **apt){
     const PU_T(pudef) *a = *apt;
     if(!a)

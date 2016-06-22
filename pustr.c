@@ -73,6 +73,11 @@ size_t pusnprint_uint32_t(char *b, size_t l, const uint32_t *ap){
     return len;
 }
 
+size_t pusnprint_int32_t(char *b, size_t l, const int32_t *ap){
+    uint32_t uap = *ap >= 0 ? *ap : -*ap;
+    return pusnprint_uint32_t(b, l, &uap);
+}
+
 
 #define pudef_dflt(t, fmt)                                          \
     static inline                                                   \

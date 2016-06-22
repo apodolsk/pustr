@@ -1,11 +1,8 @@
 #pragma once
 
-#include <dial_macros.h>
-
 #include <inttypes.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <string.h>
 
 #define NTYPES 0
 #define TRACE_START 1
@@ -16,6 +13,9 @@
 #define puprintf(...) 1
 #define putrace(_, f, as...) f(as)
 #else
+
+#define PU_CONCAT(x, y) _PU_CONCAT(x, y)
+#define _PU_CONCAT(x, y) x##y
 
 typedef size_t (*typed_snprint)(char *, size_t, const void *);
 
@@ -28,56 +28,51 @@ typedef const struct{
     _puprintf(fmt, pu_args_of(as))
 size_t _puprintf(const char *fmt, const pu_arg *args);
 
-#define pusnprintf(b, l, fmt, as...)                \
+#define pusnprintf(b, l, fmt, as...)            \
     _pusnprintf(b, l, fmt, pu_args_of(as))
 size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
 
 #define pu_args_of(as...)                       \
-    ((pu_arg []){PUMAP(pu_arg_of, _, as)})
+    ((pu_arg []){ PUMAP(pu_arg_of, _, as) })
 
-#define pu_arg_of(a, _,  __)                                            \
-    (pu_arg){(const typeof(decay(a))[1]){a}, (typed_snprint) pusnprint_of(a)}
+#define pu_arg_of(a, _,  __)                                \
+    (pu_arg){                                               \
+        .val = (const typeof(strip_bitfield(a))[1]) {a},    \
+        .typed_snprint = (typed_snprint) pusnprint_of(a)    \
+    }
 
 #define pusnprint_of(a)                                     \
-    _Generic(decay(a),                                      \
-             PUMAP2(pusnprint_of_dflt, _, DEFAULT_TYPES),   \
+    _Generic(strip_bitfield(a),                             \
+             PUMAP2(assoc_of_dflt, _, DEFAULT_TYPES),   \
+             REPEAT(assoc_of_custom, _, NTYPES)             \
     default:                                                \
-             REPEAT_NOCOMMA(LCHOOSE, decay(a), NTYPES)      \
-             pusnprint_dflt                                 \
-             REPEAT_NOCOMMA(RCHOOSE, decay(a), NTYPES))     \
-    
-#define pusnprint_of_dflt(t, _, __)                                     \
-        t                 : &CONCAT(pusnprint_, t),                     \
-        volatile t        : &CONCAT(pusnprint_, t),                     \
-        const t           : &CONCAT(pusnprint_, t),                     \
-        volatile const t  : &CONCAT(pusnprint_, t),                     \
-        t*                : &CONCAT(pusnprint_ptr_, t),                 \
-        volatile t*       : &CONCAT(pusnprint_ptr_, t),                 \
-        const t*          : &CONCAT(pusnprint_ptr_, t),                 \
-        volatile const t* : &CONCAT(pusnprint_ptr_, t)
+             pusnprint_dflt)
 
-/* TODO: I have to do this because gcc 4.9 has a bug where _Generic(b,
-   typeof(b): ...) fails to match if b has a volatile type. */
-#define LCHOOSE(i, a)                                                   \
-           choose(compat(CONCAT(putype_, i),                            \
-                         typeof(a)), &CONCAT(pusnprint_, i) ,           \
-           choose(compat(volatile CONCAT(putype_, i),                   \
-                         typeof(a)), &CONCAT(pusnprint_, i) ,           \
-           choose(compat(CONCAT(putype_, i) *,                          \
-                         typeof(a)), &CONCAT(pusnprint_ptr_, i) ,       \
-           choose(compat(volatile CONCAT(putype_, i) *,                 \
-                         typeof(a)), &CONCAT(pusnprint_ptr_, i) ,       \
-                                                                        \
+#define strip_bitfield(a) (0 ? (a) : (a))
 
-#define RCHOOSE(i, _) ))))
+#define assoc_of_dflt(t, _, __)                                         \
+        t                 : &PU_CONCAT(pusnprint_, t),                     \
+        volatile t        : &PU_CONCAT(pusnprint_, t),                     \
+        const t           : &PU_CONCAT(pusnprint_, t),                     \
+        volatile const t  : &PU_CONCAT(pusnprint_, t),                     \
+        t*                : &PU_CONCAT(pusnprint_ptr_, t),                 \
+        volatile t*       : &PU_CONCAT(pusnprint_ptr_, t),                 \
+        const t*          : &PU_CONCAT(pusnprint_ptr_, t),                 \
+        volatile const t* : &PU_CONCAT(pusnprint_ptr_, t)
 
-/* TODO: This is what it should be, were it not for that bug. */
-/* #define pusnprint_of_scoped(i, _)                                   \ */
-/*     typeof(decay((CONCAT(putype_, i)){})): &CONCAT(pusnprint_, i)                   */
+#define assoc_of_custom(i, _) _assoc_of_custom(PU_CONCAT(putype_, i), i)
+#define _assoc_of_custom(t, i)                                          \
+        t                 : &PU_CONCAT(pusnprint_, i),                     \
+        volatile t        : &PU_CONCAT(pusnprint_, i),                     \
+        const t           : &PU_CONCAT(pusnprint_, i),                     \
+        volatile const t  : &PU_CONCAT(pusnprint_, i),                     \
+        t*                : &PU_CONCAT(pusnprint_ptr_, i),                 \
+        volatile t*       : &PU_CONCAT(pusnprint_ptr_, i),                 \
+        const t*          : &PU_CONCAT(pusnprint_ptr_, i),                 \
+        volatile const t* : &PU_CONCAT(pusnprint_ptr_, i),
 
-
-/* gcc and clang don't allow 'void' to occur in the list of _Generic
-   types, but do allow it in __builtin_types_compatible_p. I use this to
+/* C11 doesn't allow 'void' to occur in the list of _Generic types, but
+   clang and gcc allow it in __builtin_types_compatible_p. I use this to
    allow putrace to report and propogate the value of fun(as) iff
    typeof(fun(as)) != void. */
 #define choose __builtin_choose_expr
@@ -149,8 +144,8 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
     uint8_t, uint16_t, uint32_t, uint64_t, double, char
 
 #define puprot(t)                                                       \
-    size_t CONCAT(pusnprint_, t)(char *b, size_t l, const t *a);        \
-    size_t CONCAT(pusnprint_ptr_, t)(char *b, size_t l, const t **a)
+    size_t PU_CONCAT(pusnprint_, t)(char *b, size_t l, const t *a);     \
+    size_t PU_CONCAT(pusnprint_ptr_, t)(char *b, size_t l, const t **a) \
 
 puprot(_Bool);
 puprot(int8_t);
@@ -166,7 +161,7 @@ puprot(char);
 
 size_t pusnprint_dflt(char *b, size_t l, const void **a);
 
-#define PUMAP(FUNC, global, ...) CONCAT(PUMAP_ , NUM_ARGS(__VA_ARGS__)) \
+#define PUMAP(FUNC, global, ...) PU_CONCAT(PUMAP_ , PU_NUM_ARGS(__VA_ARGS__)) \
     (FUNC, global, __VA_ARGS__)
 
 #define PUMAP_30(f, g, arg, ...) f(arg, g, 29), PUMAP_29(f, g, __VA_ARGS__)
@@ -201,7 +196,7 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define PUMAP_1(f, g, arg) f(arg, g, 0)
 #define PUMAP_0(f, g, arg)
 
-#define PUMAP2(FUNC, global, ...) CONCAT(PUMAP2_ , NUM_ARGS(__VA_ARGS__)) \
+#define PUMAP2(FUNC, global, ...) PU_CONCAT(PUMAP2_ , PU_NUM_ARGS(__VA_ARGS__)) \
     (FUNC, global, __VA_ARGS__)
 
 #define PUMAP2_30(f, g, arg, ...) f(arg, g, 29), PUMAP2_29(f, g, __VA_ARGS__)
@@ -236,7 +231,7 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define PUMAP2_1(f, g, arg) f(arg, g, 0)
 #define PUMAP2_0(f, g, arg)
 
-#define PUMAP3(FUNC, global, ...) CONCAT(PUMAP3_ , NUM_ARGS(__VA_ARGS__)) \
+#define PUMAP3(FUNC, global, ...) PU_CONCAT(PUMAP3_ , PU_NUM_ARGS(__VA_ARGS__)) \
     (FUNC, global, __VA_ARGS__)
 
 #define PUMAP3_30(f, g, arg, ...) f(arg, g, 29), PUMAP3_29(f, g, __VA_ARGS__)
@@ -272,7 +267,7 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define PUMAP3_0(f, g, arg)
 
 #define PUMAP_NOCOMMA(FUNC, global, ...)          \
-    CONCAT(PUMAPNC_ , NUM_ARGS(__VA_ARGS__))(FUNC, global, __VA_ARGS__)
+    PU_CONCAT(PUMAPNC_ , PU_NUM_ARGS(__VA_ARGS__))(FUNC, global, __VA_ARGS__)
 
 #define PUMAPNC_30(f, g, arg, ...) f(arg, g, 29) PUMAPNC_29(f, g, __VA_ARGS__)
 #define PUMAPNC_29(f, g, arg, ...) f(arg, g, 28) PUMAPNC_28(f, g, __VA_ARGS__)
@@ -306,7 +301,7 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define PUMAPNC_1(f, g, arg) f(arg, g, 0)
 #define PUMAPNC_0(f, g, arg)
 
-#define REPEAT(f, g, lim) CONCAT(R_ , lim)(f, g)
+#define REPEAT(f, g, lim) PU_CONCAT(R_ , lim)(f, g)
 #define R_30(f, g) f(30, g), R_29(f, g)
 #define R_29(f, g) f(29, g), R_28(f, g)
 #define R_28(f, g) f(28, g), R_27(f, g)
@@ -339,38 +334,24 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define R_1(f, g) f(1, g)
 #define R_0(f, g)
 
-#define REPEAT_NOCOMMA(f, g, lim) CONCAT(RNC_ , lim)(f, g)
-#define RNC_30(f, g) f(30, g) RNC_29(f, g)
-#define RNC_29(f, g) f(29, g) RNC_28(f, g)
-#define RNC_28(f, g) f(28, g) RNC_27(f, g)
-#define RNC_27(f, g) f(27, g) RNC_26(f, g)
-#define RNC_26(f, g) f(26, g) RNC_25(f, g)
-#define RNC_25(f, g) f(25, g) RNC_24(f, g)
-#define RNC_24(f, g) f(24, g) RNC_23(f, g)
-#define RNC_23(f, g) f(23, g) RNC_22(f, g)
-#define RNC_22(f, g) f(22, g) RNC_21(f, g)
-#define RNC_21(f, g) f(21, g) RNC_20(f, g)
-#define RNC_20(f, g) f(20, g) RNC_19(f, g)
-#define RNC_19(f, g) f(19, g) RNC_18(f, g)
-#define RNC_18(f, g) f(18, g) RNC_17(f, g)
-#define RNC_17(f, g) f(17, g) RNC_16(f, g)
-#define RNC_16(f, g) f(16, g) RNC_15(f, g)
-#define RNC_15(f, g) f(15, g) RNC_14(f, g)
-#define RNC_14(f, g) f(14, g) RNC_13(f, g)
-#define RNC_13(f, g) f(13, g) RNC_12(f, g)
-#define RNC_12(f, g) f(12, g) RNC_11(f, g)
-#define RNC_11(f, g) f(11, g) RNC_10(f, g)
-#define RNC_10(f, g) f(10, g) RNC_9(f, g)
-#define RNC_9(f, g) f(9, g) RNC_8(f, g)
-#define RNC_8(f, g) f(8, g) RNC_7(f, g)
-#define RNC_7(f, g) f(7, g) RNC_6(f, g)
-#define RNC_6(f, g) f(6, g) RNC_5(f, g)
-#define RNC_5(f, g) f(5, g) RNC_4(f, g)
-#define RNC_4(f, g) f(4, g) RNC_3(f, g)
-#define RNC_3(f, g) f(3, g) RNC_2(f, g)
-#define RNC_2(f, g) f(2, g) RNC_1(f, g)
-#define RNC_1(f, g) f(1, g)
-#define RNC_0(f, g)
+#define PU_NUM_ARGS(as...) _PU_NUM_ARGS(as)
+#define _PU_NUM_ARGS(...)                                               \
+    PU_GET_41ST(                                                        \
+        _, ##__VA_ARGS__, 39, 38, 37, 36, 35,                           \
+        34, 33, 32, 31, 30, 29, 28, 27, 26, 25,                         \
+        24, 23, 22, 21, 20, 19, 18, 17, 16, 15,                         \
+        14, 13, 12, 11, 10, 9, 8, 7, 6, 5,                              \
+        4, 3, 2, 1, 0)                                                  \
+    
+#define PU_GET_41ST(a1, a2, a3, a4, a5, a6, a7,         \
+                    a8, a9, a10, a11, a12, a13,         \
+                    a14, a15, a16, a17, a18, a19, a20,  \
+                    a21, a22, a23, a24, a25, a26, a27,  \
+                    a28, a29, a30, a31, a32, a33, a34,  \
+                    a35, a36, a37, a38, a39, a40,       \
+                    N, ...)                             \
+    N                                                   \
+
 
 #endif
 
