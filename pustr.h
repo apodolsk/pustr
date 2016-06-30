@@ -2,13 +2,11 @@
 
 #include <inttypes.h>
 #include <stddef.h>
-#include <stdio.h>
 
 #define NTYPES 0
 #define TRACE_START 1
 
 #ifdef NPUSTR
-#define pudef_dflt(...)
 #define pusnprintf(...) 1
 #define puprintf(...) 1
 #define putrace(_, f, as...) f(as)
@@ -43,8 +41,8 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
 
 #define pusnprint_of(a)                                     \
     _Generic(strip_bitfield(a),                             \
-             PUMAP2(assoc_of_dflt, _, DEFAULT_TYPES),   \
-             REPEAT(assoc_of_custom, _, NTYPES)             \
+             PUMAP2(assoc_of_dflt, _, DEFAULT_TYPES),       \
+             REPEAT_NOCOMMA(assoc_of_custom, _, NTYPES)     \
     default:                                                \
              pusnprint_dflt)
 
@@ -79,8 +77,11 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
 #define compat __builtin_types_compatible_p
 #define is_void(e) compat(void, typeof(e))
 
-/* To avoid double-eval of function args. */
 #define pu_strfmt(_, __, ___) %
+
+/* To avoid double-eval of function arg expressions. */
+#define estore(e, pfx, i) __auto_type PU_CONCAT(pfx, i) = e;
+#define eref(_, pfx, i) PU_CONCAT(pfx, i)
 
 #if TRACE_START
 #define putrace(print, fun, as...)                                      \
@@ -112,6 +113,7 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
                }));                                                     \
     })
 #else
+
 #define putrace(print, fun, as...)                                      \
     ({                                                                  \
         PUMAP_NOCOMMA(estore, __pu, as);                                \
@@ -301,36 +303,36 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
 #define PUMAPNC_1(f, g, arg) f(arg, g, 0)
 #define PUMAPNC_0(f, g, arg)
 
-#define REPEAT(f, g, lim) PU_CONCAT(R_ , lim)(f, g)
-#define R_30(f, g) f(30, g), R_29(f, g)
-#define R_29(f, g) f(29, g), R_28(f, g)
-#define R_28(f, g) f(28, g), R_27(f, g)
-#define R_27(f, g) f(27, g), R_26(f, g)
-#define R_26(f, g) f(26, g), R_25(f, g)
-#define R_25(f, g) f(25, g), R_24(f, g)
-#define R_24(f, g) f(24, g), R_23(f, g)
-#define R_23(f, g) f(23, g), R_22(f, g)
-#define R_22(f, g) f(22, g), R_21(f, g)
-#define R_21(f, g) f(21, g), R_20(f, g)
-#define R_20(f, g) f(20, g) , R_19(f, g)
-#define R_19(f, g) f(19, g) , R_18(f, g)
-#define R_18(f, g) f(18, g) , R_17(f, g)
-#define R_17(f, g) f(17, g) , R_16(f, g)
-#define R_16(f, g) f(16, g) , R_15(f, g)
-#define R_15(f, g) f(15, g) , R_14(f, g)
-#define R_14(f, g) f(14, g) , R_13(f, g)
-#define R_13(f, g) f(13, g) , R_12(f, g)
-#define R_12(f, g) f(12, g) , R_11(f, g)
-#define R_11(f, g) f(11, g) , R_10(f, g)
-#define R_10(f, g) f(10, g) , R_9(f, g)
-#define R_9(f, g) f(9, g) , R_8(f, g)
-#define R_8(f, g) f(8, g) , R_7(f, g)
-#define R_7(f, g) f(7, g) , R_6(f, g)
-#define R_6(f, g) f(6, g) , R_5(f, g)
-#define R_5(f, g) f(5, g) , R_4(f, g)
-#define R_4(f, g) f(4, g) , R_3(f, g)
-#define R_3(f, g) f(3, g) , R_2(f, g)
-#define R_2(f, g) f(2, g) , R_1(f, g)
+#define REPEAT_NOCOMMA(f, g, lim) PU_CONCAT(R_ , lim)(f, g)
+#define R_30(f, g) f(30, g) R_29(f, g)
+#define R_29(f, g) f(29, g) R_28(f, g)
+#define R_28(f, g) f(28, g) R_27(f, g)
+#define R_27(f, g) f(27, g) R_26(f, g)
+#define R_26(f, g) f(26, g) R_25(f, g)
+#define R_25(f, g) f(25, g) R_24(f, g)
+#define R_24(f, g) f(24, g) R_23(f, g)
+#define R_23(f, g) f(23, g) R_22(f, g)
+#define R_22(f, g) f(22, g) R_21(f, g)
+#define R_21(f, g) f(21, g) R_20(f, g)
+#define R_20(f, g) f(20, g) R_19(f, g)
+#define R_19(f, g) f(19, g) R_18(f, g)
+#define R_18(f, g) f(18, g) R_17(f, g)
+#define R_17(f, g) f(17, g) R_16(f, g)
+#define R_16(f, g) f(16, g) R_15(f, g)
+#define R_15(f, g) f(15, g) R_14(f, g)
+#define R_14(f, g) f(14, g) R_13(f, g)
+#define R_13(f, g) f(13, g) R_12(f, g)
+#define R_12(f, g) f(12, g) R_11(f, g)
+#define R_11(f, g) f(11, g) R_10(f, g)
+#define R_10(f, g) f(10, g) R_9(f, g)
+#define R_9(f, g) f(9, g) R_8(f, g)
+#define R_8(f, g) f(8, g) R_7(f, g)
+#define R_7(f, g) f(7, g) R_6(f, g)
+#define R_6(f, g) f(6, g) R_5(f, g)
+#define R_5(f, g) f(5, g) R_4(f, g)
+#define R_4(f, g) f(4, g) R_3(f, g)
+#define R_3(f, g) f(3, g) R_2(f, g)
+#define R_2(f, g) f(2, g) R_1(f, g)
 #define R_1(f, g) f(1, g)
 #define R_0(f, g)
 
@@ -352,6 +354,12 @@ size_t pusnprint_dflt(char *b, size_t l, const void **a);
                     N, ...)                             \
     N                                                   \
 
+
+#define STRLIT(xs...) _STRLIT(xs)
+#define _STRLIT(xs...) #xs
+
+#define COMMAPFX_IF_NZ(a...) _COMMAPFX_IF_NZ(a)
+#define _COMMAPFX_IF_NZ(a...) , ##a
 
 #endif
 

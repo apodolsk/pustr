@@ -3,12 +3,11 @@
 
 #ifndef NPUSTR
 
-static
-size_t __pusnprintf(char *b, size_t max, const char *fmt, const pu_arg **ap){
+size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *ap){
     size_t l = 0;
     for(const char *c = fmt; *c != '\0'; c++){
         if(*c == '%'){
-            const pu_arg *a = (*ap)++;
+            const pu_arg *a = ap++;
             l += a->typed_snprint(b + l, max > l ? max - l : 0, a->val);
         }
         else if(l++ < max)
@@ -19,18 +18,13 @@ size_t __pusnprintf(char *b, size_t max, const char *fmt, const pu_arg **ap){
     return l;
 }
 
-__attribute__ ((noinline))
-size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *a){
-    return  __pusnprintf(b, max, fmt, &a);
-}
-
-#define PU_DFLT_BUF_SZ 80
+#define PU_DFLT_BUF_SZ 1
 size_t _puprintf(const char *fmt, const pu_arg *a){
     size_t need;
     size_t max = PU_DFLT_BUF_SZ;
     for(int i = 0; i < 2; i++){
         char b[max];
-        need = 1 + __pusnprintf(b, max, fmt, &a);
+        need = 1 + _pusnprintf(b, max, fmt, a);
         if(max >= need){
             fputs(b, stdout);
             break;
@@ -52,41 +46,62 @@ size_t pusnprint_char(char *b, size_t l, const char *a){
     return 1;
 }
 
-size_t pusnprint_dflt(char *b, size_t l, const void **a){
-    return (size_t) snprintf(b, l, "%p", *a);
+size_t pusnprint_dflt(char *b, size_t l, const void **ap){
+    const size_t max = 3 + 2 * sizeof(void *);
+    
+    uintptr_t a = (uintptr_t) *ap;
+    char tmp[max];
+    char *c = &tmp[max];
+    do{
+        *--c = "0123456789abcdef"[a % 16];
+        a /= 16;
+    }while(a);
+
+    size_t need = 3 + &tmp[max] - c;
+    if(need <= l){
+        b[0] = '0';
+        b[1] = 'x';
+        for(char *bc = &b[2]; bc != &b[need]; bc++)
+            *bc = *c++;
+    }
+
+    return need - 1;
 }
 
 size_t pusnprint_uint32_t(char *b, size_t l, const uint32_t *ap){
-    uint32_t u = *ap;
-    /* char buf[8 * sizeof(uint32_t)]; */
-    char buf[11];
-    char *e = &buf[sizeof(buf)];
-    char *p = e;
-    static char digits[] = "0123456789abcdef";
+    const size_t max = 3 * sizeof(uint32_t);
+
+    uint32_t a = *ap;
+    char tmp[max];
+    char *c = &tmp[max];
     do{
-        *--p = digits[u % 10];
-        u /= 10;
-    }while(u);
-    size_t len = e - p;
-    for(char *bp = b; bp != b + l && bp != b + len; bp++)
-        *bp = *p++;
-    return len;
+        *--c = '0' + a % 10;
+        a /= 10;
+    }while(a);
+    
+    size_t need = 1 + &tmp[max] - c;
+    if(need <= l){
+        for(char *bc = b; bc != &b[need]; bc++)
+            *bc = *c++;
+    }
+
+    return need - 1;
 }
 
 size_t pusnprint_int32_t(char *b, size_t l, const int32_t *ap){
-    uint32_t uap = *ap >= 0 ? *ap : -*ap;
-    return pusnprint_uint32_t(b, l, &uap);
+    int32_t a = *ap;
+    if(a < 0)
+        a = -a;
+    return pusnprint_uint32_t(b, l, (uint32_t *) &a);
 }
 
 
 #define pudef_dflt(t, fmt)                                          \
-    static inline                                                   \
-    size_t CONCAT(pusnprint_, t)                                    \
+    size_t PU_CONCAT(pusnprint_, t)                                    \
     (char *b, size_t l, const t *a){                                \
         return (size_t) snprintf(b, l, fmt, *a);                    \
     }                                                               \
-    static inline                                                   \
-    size_t CONCAT(pusnprint_ptr_, t)                                \
+    size_t PU_CONCAT(pusnprint_ptr_, t)                              \
     (char *b, size_t l, const t **a){                               \
         if(!*a)                                                     \
             return (size_t) snprintf(b, l, "("STRLIT(t)" *)<nil>"); \
