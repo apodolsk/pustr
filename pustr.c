@@ -18,7 +18,7 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *ap){
     return l;
 }
 
-#define PU_DFLT_BUF_SZ 1
+#define PU_DFLT_BUF_SZ 160
 size_t _puprintf(const char *fmt, const pu_arg *a){
     size_t need;
     size_t max = PU_DFLT_BUF_SZ;
