@@ -5,7 +5,7 @@
     case num_as - i - 1:                                                \
            l += pusnprint_of(a)(_b + l,                                 \
                                 _max >= l ? _max - l : 0,               \
-                                (typeof(a) []){a});                     \
+                                (void *)(typeof(strip_bitfield(a)) []){a}); \
            break;                                                       \
 
 #define pusnprintf_inline(b, max, fmt, as...)                           \
@@ -19,7 +19,7 @@
             char c = _fmt[i];                                           \
             if(c == '%'){                                               \
                 switch(idx++){                                          \
-                    PUMAP_NOCOMMA(pudispatch_inline, NUM_ARGS(as), as)  \
+                    PUMAP_NOCOMMA(pudispatch_inline, PU_NUM_ARGS(as), as) \
                 }                                                       \
             }                                                           \
             else if(l++ < _max)                                         \
