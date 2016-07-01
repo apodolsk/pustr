@@ -18,7 +18,7 @@ size_t pusnprint_ptr_char(char *b, size_t l, const char **ap){
     return need;
 }
 
-
+__attribute__((flatten))
 size_t pusnprint_dflt(char *b, size_t l, const void **ap){
     const size_t max = 2 * sizeof(void *);
     
@@ -40,7 +40,8 @@ size_t pusnprint_dflt(char *b, size_t l, const void **ap){
 
     return need;
 }
-
+            /* *--c = '0' + neg ? -(a % 10) : a % 10;                      \ */
+#include <stdio.h>
 #define pudef_integral(t, signed)                                       \
     size_t PU_CONCAT(pusnprint_, t)(char *b, size_t l, const t *ap){    \
         const size_t max = 3 * sizeof(t);                               \
@@ -49,15 +50,15 @@ size_t pusnprint_dflt(char *b, size_t l, const void **ap){
         char tmp[max];                                                  \
         char *c = &tmp[max];                                            \
         do{                                                             \
-            *--c = '0' + (unsigned char)(a % 10);                       \
+            *--c = '0' + (neg ? -(a % 10) : (a % 10));                  \
             a /= 10;                                                    \
         }while(a);                                                      \
                                                                         \
         size_t need = neg + &tmp[max] - c;                              \
         if(need <= l){                                                  \
             if(neg)                                                     \
-                *b++ = '-';                                             \
-            for(char *bc = b; bc != &b[need - neg]; bc++)               \
+                *b = '-';                                               \
+            for(char *bc = b + neg; bc != &b[need]; bc++)               \
                 *bc = *c++;                                             \
         }                                                               \
                                                                         \
