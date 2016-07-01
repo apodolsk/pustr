@@ -15,16 +15,16 @@
 #define pu_strfmt(_, __, ___) %
 
 /* To avoid double-eval of function arg expressions. */
-#define estore(e, pfx, i) __auto_type PU_CONCAT(pfx, i) = e;
-#define eref(_, pfx, i) PU_CONCAT(pfx, i)
+#define pustore(e, pfx, i) __auto_type PU_CONCAT(pfx, i) = e;
+#define puref(_, pfx, i) PU_CONCAT(pfx, i)
 
 #if TRACE_START
 #define putrace(print, fun, as...)                                      \
     ({                                                                  \
-        PUMAP_NOCOMMA(estore, __pu, as);                                \
+        PUMAP_NOCOMMA(pustore, __pu, as);                                \
         print("-- Begin %(" STRLIT(PUMAP(pu_strfmt, _, as))             \
               ") in %:%", #fun                                          \
-              COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),                   \
+              COMMAPFX_IF_NZ(PUMAP3(puref, __pu, as)),                   \
               __func__, __LINE__);                                      \
         typeof(choose(is_void(fun(as)),                                 \
                       1,                                                \
@@ -32,8 +32,8 @@
             __pu_ret;                                                   \
         __pu_ret =                                                      \
         choose(is_void(fun(as)),                                        \
-               (fun(PUMAP(eref, __pu, as)), 0),                         \
-               fun(PUMAP(eref, __pu, as)));                             \
+               (fun(PUMAP(puref, __pu, as)), 0),                         \
+               fun(PUMAP(puref, __pu, as)));                             \
         choose(is_void(fun(as)),                                        \
                ({                                                       \
                    print("-- End %() in %:%", #fun,                     \
@@ -42,7 +42,7 @@
                ({                                                       \
                    print("-- End % = %("STRLIT(PUMAP(pu_strfmt, _, as)) \
                          ") in %:%", __pu_ret, #fun                     \
-                         COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),        \
+                         COMMAPFX_IF_NZ(PUMAP3(puref, __pu, as)),        \
                          __func__, __LINE__);                           \
                    __pu_ret;                                            \
                }));                                                     \
@@ -50,25 +50,25 @@
 #else
 #define putrace(print, fun, as...)                                      \
     ({                                                                  \
-        PUMAP_NOCOMMA(estore, __pu, as);                                \
+        PUMAP_NOCOMMA(pustore, __pu, as);                                \
         typeof(choose(is_void(fun(as)),                                 \
                       1,                                                \
                       fun(as)))                                         \
         __pu_ret =                                                      \
         choose(is_void(fun(as)),                                        \
-               (fun(PUMAP(eref, __pu, as)), 0),                         \
-               fun(PUMAP(eref, __pu, as)));                             \
+               (fun(PUMAP(puref, __pu, as)), 0),                         \
+               fun(PUMAP(puref, __pu, as)));                             \
         choose(is_void(fun(as)),                                        \
                ({                                                       \
                    print("%("STRLIT(PUMAP(pu_strfmt, _, as))            \
                          ") in %:%:%", #fun                             \
-                         COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),        \
+                         COMMAPFX_IF_NZ(PUMAP3(puref, __pu, as)),        \
                          __FILE__, __func__, __LINE__);                 \
                }),                                                      \
                ({                                                       \
                    print("% = %("STRLIT(PUMAP(pu_strfmt, _, as))        \
                          ") in %:%:%", __pu_ret, #fun                   \
-                         COMMAPFX_IF_NZ(PUMAP3(eref, __pu, as)),        \
+                         COMMAPFX_IF_NZ(PUMAP3(puref, __pu, as)),        \
                          __FILE__, __func__, __LINE__);                 \
                    __pu_ret;                                            \
                }));                                                     \
