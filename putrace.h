@@ -4,6 +4,20 @@
 #define putrace(_, f, as...) f(as)
 #else
 
+/* C11 doesn't allow 'void' to occur in the list of _Generic types, but
+   clang and gcc allow it in __builtin_types_compatible_p. I use this to
+   allow putrace to report and propogate the value of fun(as) iff
+   typeof(fun(as)) != void. */
+#define choose __builtin_choose_expr
+#define compat __builtin_types_compatible_p
+#define is_void(e) compat(void, typeof(e))
+
+#define pu_strfmt(_, __, ___) %
+
+/* To avoid double-eval of function arg expressions. */
+#define estore(e, pfx, i) __auto_type PU_CONCAT(pfx, i) = e;
+#define eref(_, pfx, i) PU_CONCAT(pfx, i)
+
 #if TRACE_START
 #define putrace(print, fun, as...)                                      \
     ({                                                                  \
