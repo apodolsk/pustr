@@ -19,13 +19,13 @@ typedef const struct{
     typed_snprint typed_snprint;
 }pu_arg;
 
-#define puprintf(fmt, as...)                    \
-    _puprintf(fmt, pu_args_of(as))
-size_t _puprintf(const char *fmt, const pu_arg *args);
-
 #define pusnprintf(b, l, fmt, as...)            \
     _pusnprintf(b, l, fmt, pu_args_of(as))
 size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *args);
+
+#define puprintf(fmt, as...)                    \
+    _puprintf(fmt, pu_args_of(as))
+int _puprintf(const char *fmt, const pu_arg *args);
 
 #define pu_args_of(as...)                       \
     ((pu_arg []){ PUMAP(pu_arg_of, _, as) })

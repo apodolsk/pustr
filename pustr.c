@@ -19,19 +19,17 @@ size_t _pusnprintf(char *b, size_t max, const char *fmt, const pu_arg *ap){
 }
 
 #define PU_DFLT_BUF_SZ 160
-size_t _puprintf(const char *fmt, const pu_arg *a){
+int _puprintf(const char *fmt, const pu_arg *a){
     size_t need;
     size_t max = PU_DFLT_BUF_SZ;
     for(int i = 0; i < 2; i++){
         char b[max];
         need = 1 + _pusnprintf(b, max, fmt, a);
-        if(max >= need){
-            fputs(b, stdout);
-            break;
-        }
+        if(max >= need)
+            return fputs(b, stdout) ?: (int) need;
         max = need;
     }
-    return need;
+    __builtin_unreachable();
 }
 
 #endif
