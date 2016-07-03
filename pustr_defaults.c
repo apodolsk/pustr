@@ -86,4 +86,9 @@ pudef_integral(uint32_t, 0)
 pudef_integral(uint64_t, 0)
 /* pudef_dflt(double, "%f") */
 
+#include <stdio.h>
+size_t pusnprint_double(char *b, size_t l, const double *d){
+    return snprintf(b, l, "%f", *d);
+}
+
 #pragma GCC diagnostic pop
