@@ -43,6 +43,7 @@ size_t pusnprint_dflt(char *b, size_t l, const void **ap){
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wbool-compare"
+#pragma GCC diagnostic ignored "-Wtype-limits"
 
 #include <stdio.h>
 #define pudef_integral(t, signed)                                       \
